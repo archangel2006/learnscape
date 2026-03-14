@@ -13,6 +13,7 @@ import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
 import { type SystemStatus } from "@/components/Scan/SystemStatusBadge";
 import { analyzeScene } from "@/ai/flows/analyze-scene-flow";
+import { generateTopics } from "@/ai/flows/generate-topics-flow";
 
 const INITIAL_SUBJECTS = [
   { 
@@ -34,7 +35,7 @@ const INITIAL_SUBJECTS = [
 
 export default function ScanPage() {
   const cameraRef = useRef<CameraViewHandle>(null);
-  const [subjects] = useState(INITIAL_SUBJECTS);
+  const [subjects, setSubjects] = useState(INITIAL_SUBJECTS);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus>('initializing');
   
@@ -91,6 +92,7 @@ export default function ScanPage() {
     setSystemStatus('analyzing');
 
     try {
+      // 1. Scene Analysis
       const result = await analyzeScene({ photoDataUri: frame });
       
       setDetectedObject(result.primary_object);
@@ -105,6 +107,20 @@ export default function ScanPage() {
         title: "Object Identified",
         description: `Detected: ${result.primary_object} (${Math.round(result.confidence * 100)}% confidence)`,
       });
+
+      // 2. Topic Generation
+      const topics = await generateTopics({
+        objectName: result.primary_object,
+        materials: result.materials,
+        visualProperties: result.visual_properties,
+      });
+
+      setSubjects([
+        { id: 'physics', label: 'Physics', concepts: topics.physics },
+        { id: 'chemistry', label: 'Chemistry', concepts: topics.chemistry },
+        { id: 'mathematics', label: 'Mathematics', concepts: topics.mathematics },
+      ]);
+
     } catch (error) {
       console.error("Analysis error:", error);
       setSystemStatus('error');
