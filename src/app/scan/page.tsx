@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CameraView } from "@/components/Scan/CameraView";
 import { OverlayCanvas } from "@/components/Scan/OverlayCanvas";
 import { SubjectPillBar } from "@/components/Scan/SubjectPillBar";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
+import { type SystemStatus } from "@/components/Scan/SystemStatusBadge";
 
 const INITIAL_SUBJECTS = [
   { 
@@ -34,15 +35,36 @@ const INITIAL_SUBJECTS = [
 export default function ScanPage() {
   const [subjects] = useState(INITIAL_SUBJECTS);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [systemStatus, setSystemStatus] = useState<SystemStatus>('initializing');
+
+  useEffect(() => {
+    // Simulate camera initialization
+    const timer = setTimeout(() => {
+      setSystemStatus('ready');
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
 
   const handleConceptSelect = (concept: string) => {
+    setSystemStatus('analyzing');
     toast({
       title: "Concept Selected",
       description: `Analyzing: ${concept} in real-time.`,
     });
-    // This will later trigger GenAI visual overlay suggestions
+    
+    // Simulate transition to active visualization
+    setTimeout(() => {
+      setSystemStatus('active');
+    }, 1500);
+  };
+
+  const handleSubjectSelect = (id: string) => {
+    setSelectedSubjectId(id);
+    if (systemStatus === 'active') {
+      setSystemStatus('ready'); // Reset when changing subjects
+    }
   };
 
   return (
@@ -60,9 +82,6 @@ export default function ScanPage() {
         </div>
         
         <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="bg-primary/20 backdrop-blur-md rounded-full px-4 py-1.5 border border-primary/30 text-white text-[10px] font-bold uppercase tracking-widest hidden md:block">
-            Live Analysis Active
-          </div>
           <ThemeToggle />
         </div>
       </div>
@@ -70,7 +89,7 @@ export default function ScanPage() {
       {/* Main Content Area */}
       <main className="flex-1 relative">
         <CameraView />
-        <OverlayCanvas />
+        <OverlayCanvas status={systemStatus} />
         
         {/* Right Side Concept Stack (Responsive) */}
         <ConceptStack 
@@ -88,7 +107,7 @@ export default function ScanPage() {
             <SubjectPillBar 
               subjects={subjects} 
               selectedId={selectedSubjectId} 
-              onSelect={setSelectedSubjectId} 
+              onSelect={handleSubjectSelect} 
             />
           </div>
 
@@ -107,14 +126,6 @@ export default function ScanPage() {
           </div>
         </div>
       </main>
-      
-      {/* Scanning status banner */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 w-max bg-white/5 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full pointer-events-none animate-in fade-in slide-in-from-top-4 duration-1000">
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-white text-[10px] font-bold tracking-widest uppercase">System Calibrated</span>
-        </div>
-      </div>
     </div>
   );
 }
