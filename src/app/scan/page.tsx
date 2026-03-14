@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -14,6 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { type SystemStatus } from "@/components/Scan/SystemStatusBadge";
 import { analyzeScene } from "@/ai/flows/analyze-scene-flow";
 import { generateTopics } from "@/ai/flows/generate-topics-flow";
+import { speak, stopSpeaking } from "@/lib/speech-service";
 
 const INITIAL_SUBJECTS = [
   { 
@@ -51,7 +53,11 @@ export default function ScanPage() {
     const timer = setTimeout(() => {
       setSystemStatus('ready');
     }, 2000);
-    return () => clearTimeout(timer);
+    
+    return () => {
+      clearTimeout(timer);
+      stopSpeaking();
+    };
   }, []);
 
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
@@ -63,6 +69,9 @@ export default function ScanPage() {
       description: `Analyzing: ${concept} in real-time.`,
     });
     
+    // Voice guidance for concept selection
+    speak(`Explaining the concept of ${concept} now.`);
+    
     setTimeout(() => {
       setSystemStatus('active');
     }, 1500);
@@ -72,6 +81,12 @@ export default function ScanPage() {
     setSelectedSubjectId(id);
     if (systemStatus === 'active') {
       setSystemStatus('ready');
+    }
+    
+    const subject = subjects.find(s => s.id === id);
+    if (subject) {
+      // Voice guidance for subject selection
+      speak(`You selected ${subject.label}. Here are some ${subject.label} concepts related to this object. Which one would you like to explore?`);
     }
   };
 
@@ -90,6 +105,7 @@ export default function ScanPage() {
 
     setIsAnalyzing(true);
     setSystemStatus('analyzing');
+    stopSpeaking(); // Cancel any current speech when starting a new scan
 
     try {
       // 1. Scene Analysis
@@ -120,6 +136,9 @@ export default function ScanPage() {
         { id: 'chemistry', label: 'Chemistry', concepts: topics.chemistry },
         { id: 'mathematics', label: 'Mathematics', concepts: topics.mathematics },
       ]);
+
+      // Voice guidance after object detection and topic generation
+      speak(`I see a ${result.primary_object}. Would you like to explore the physics, chemistry, or mathematics behind it?`);
 
     } catch (error) {
       console.error("Analysis error:", error);
