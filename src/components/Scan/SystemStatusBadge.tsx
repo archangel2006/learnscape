@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -27,7 +26,7 @@ const statusConfig = {
     dot: "bg-blue-500",
   },
   active: {
-    label: "Visualization Active",
+    label: "Object Detected",
     color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
     dot: "bg-emerald-500",
   },

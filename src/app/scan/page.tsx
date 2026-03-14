@@ -40,7 +40,9 @@ export default function ScanPage() {
   
   // AI Detection State
   const [detectedObject, setDetectedObject] = useState<string | null>(null);
+  const [detectedSecondaryElements, setDetectedSecondaryElements] = useState<string[]>([]);
   const [detectedMaterials, setDetectedMaterials] = useState<string[]>([]);
+  const [detectedVisualProperties, setDetectedVisualProperties] = useState<string[]>([]);
   const [confidenceScore, setConfidenceScore] = useState<number>(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -90,14 +92,18 @@ export default function ScanPage() {
 
     try {
       const result = await analyzeScene({ photoDataUri: frame });
-      setDetectedObject(result.object);
+      
+      setDetectedObject(result.primary_object);
+      setDetectedSecondaryElements(result.secondary_elements);
       setDetectedMaterials(result.materials);
+      setDetectedVisualProperties(result.visual_properties);
       setConfidenceScore(result.confidence);
+      
       setSystemStatus('active');
       
       toast({
         title: "Object Identified",
-        description: `Detected: ${result.object} (${Math.round(result.confidence * 100)}% confidence)`,
+        description: `Detected: ${result.primary_object} (${Math.round(result.confidence * 100)}% confidence)`,
       });
     } catch (error) {
       console.error("Analysis error:", error);
