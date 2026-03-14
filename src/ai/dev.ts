@@ -1,1 +1,6 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/explain-scanned-object-flow.ts';
+import '@/ai/flows/voice-query-for-scanned-object-flow.ts';
+import '@/ai/flows/generate-visual-overlay-suggestions-flow.ts';

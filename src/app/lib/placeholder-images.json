@@ -1,0 +1,17 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-bg",
+      "description": "Abstract futuristic blue digital connections",
+      "imageUrl": "https://picsum.photos/seed/learnscape-hero/1200/800",
+      "imageHint": "abstract technology"
+    },
+    {
+      "id": "demo-preview",
+      "description": "A leaf with scientific overlays and labels",
+      "imageUrl": "https://picsum.photos/seed/learnscape-leaf/800/600",
+      "imageHint": "nature science"
+    }
+  ]
+}
