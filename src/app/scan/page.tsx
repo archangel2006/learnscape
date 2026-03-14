@@ -1,18 +1,18 @@
-
 "use client";
 
-import { useState, useEffect } from "react";
-import { CameraView } from "@/components/Scan/CameraView";
+import { useState, useEffect, useRef } from "react";
+import { CameraView, type CameraViewHandle } from "@/components/Scan/CameraView";
 import { OverlayCanvas } from "@/components/Scan/OverlayCanvas";
 import { SubjectPillBar } from "@/components/Scan/SubjectPillBar";
 import { ConceptStack } from "@/components/Scan/ConceptStack";
 import { VoiceControls } from "@/components/Scan/VoiceControls";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { Camera, ChevronLeft } from "lucide-react";
+import { Camera, ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
 import { type SystemStatus } from "@/components/Scan/SystemStatusBadge";
+import { analyzeScene } from "@/ai/flows/analyze-scene-flow";
 
 const INITIAL_SUBJECTS = [
   { 
@@ -33,12 +33,18 @@ const INITIAL_SUBJECTS = [
 ];
 
 export default function ScanPage() {
+  const cameraRef = useRef<CameraViewHandle>(null);
   const [subjects] = useState(INITIAL_SUBJECTS);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus>('initializing');
+  
+  // AI Detection State
+  const [detectedObject, setDetectedObject] = useState<string | null>(null);
+  const [detectedMaterials, setDetectedMaterials] = useState<string[]>([]);
+  const [confidenceScore, setConfidenceScore] = useState<number>(0);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
-    // Simulate camera initialization
     const timer = setTimeout(() => {
       setSystemStatus('ready');
     }, 2000);
@@ -54,7 +60,6 @@ export default function ScanPage() {
       description: `Analyzing: ${concept} in real-time.`,
     });
     
-    // Simulate transition to active visualization
     setTimeout(() => {
       setSystemStatus('active');
     }, 1500);
@@ -63,7 +68,47 @@ export default function ScanPage() {
   const handleSubjectSelect = (id: string) => {
     setSelectedSubjectId(id);
     if (systemStatus === 'active') {
-      setSystemStatus('ready'); // Reset when changing subjects
+      setSystemStatus('ready');
+    }
+  };
+
+  const handleCapture = async () => {
+    if (isAnalyzing) return;
+    
+    const frame = cameraRef.current?.getFrame();
+    if (!frame) {
+      toast({
+        variant: "destructive",
+        title: "Capture Failed",
+        description: "Could not grab frame from camera.",
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setSystemStatus('analyzing');
+
+    try {
+      const result = await analyzeScene({ photoDataUri: frame });
+      setDetectedObject(result.object);
+      setDetectedMaterials(result.materials);
+      setConfidenceScore(result.confidence);
+      setSystemStatus('active');
+      
+      toast({
+        title: "Object Identified",
+        description: `Detected: ${result.object} (${Math.round(result.confidence * 100)}% confidence)`,
+      });
+    } catch (error) {
+      console.error("Analysis error:", error);
+      setSystemStatus('error');
+      toast({
+        variant: "destructive",
+        title: "Analysis Error",
+        description: "Failed to identify object. Please try again.",
+      });
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -88,10 +133,10 @@ export default function ScanPage() {
       
       {/* Main Content Area */}
       <main className="flex-1 relative">
-        <CameraView />
+        <CameraView ref={cameraRef} />
         <OverlayCanvas status={systemStatus} />
         
-        {/* Right Side Concept Stack (Responsive) */}
+        {/* Right Side Concept Stack */}
         <ConceptStack 
           concepts={selectedSubject?.concepts || []} 
           isVisible={!!selectedSubjectId} 
@@ -117,8 +162,13 @@ export default function ScanPage() {
             
             <div className="relative group">
               <div className="absolute inset-0 bg-primary rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity" />
-              <Button size="icon" className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90 shadow-xl relative z-10 border-4 border-white/20">
-                <Camera size={32} />
+              <Button 
+                onClick={handleCapture}
+                disabled={isAnalyzing}
+                size="icon" 
+                className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90 shadow-xl relative z-10 border-4 border-white/20"
+              >
+                {isAnalyzing ? <Loader2 size={32} className="animate-spin" /> : <Camera size={32} />}
               </Button>
             </div>
             

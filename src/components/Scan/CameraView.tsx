@@ -1,14 +1,33 @@
-
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from "react";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-export function CameraView() {
+export interface CameraViewHandle {
+  getFrame: () => string | null;
+}
+
+export const CameraView = forwardRef<CameraViewHandle>((props, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    getFrame: () => {
+      if (!videoRef.current) return null;
+      
+      const canvas = document.createElement("canvas");
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext("2d");
+      
+      if (!ctx) return null;
+      
+      ctx.drawImage(videoRef.current, 0, 0);
+      return canvas.toDataURL("image/jpeg", 0.8);
+    }
+  }));
 
   useEffect(() => {
     async function setupCamera() {
@@ -57,4 +76,6 @@ export function CameraView() {
       )}
     </div>
   );
-}
+});
+
+CameraView.displayName = "CameraView";
