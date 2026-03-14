@@ -11,6 +11,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Camera, ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { toast } from "@/hooks/use-toast";
 
 const INITIAL_SUBJECTS = [
   { 
@@ -36,6 +37,14 @@ export default function ScanPage() {
 
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
 
+  const handleConceptSelect = (concept: string) => {
+    toast({
+      title: "Concept Selected",
+      description: `Analyzing: ${concept} in real-time.`,
+    });
+    // This will later trigger GenAI visual overlay suggestions
+  };
+
   return (
     <div className="h-svh w-full relative flex flex-col bg-black overflow-hidden">
       {/* Top Bar */}
@@ -51,8 +60,8 @@ export default function ScanPage() {
         </div>
         
         <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="bg-black/50 backdrop-blur-md rounded-full px-4 py-1.5 border border-white/10 text-white text-xs font-bold uppercase tracking-widest hidden md:block">
-            Live Analysis
+          <div className="bg-primary/20 backdrop-blur-md rounded-full px-4 py-1.5 border border-primary/30 text-white text-[10px] font-bold uppercase tracking-widest hidden md:block">
+            Live Analysis Active
           </div>
           <ThemeToggle />
         </div>
@@ -63,10 +72,12 @@ export default function ScanPage() {
         <CameraView />
         <OverlayCanvas />
         
-        {/* Right Side Concept Stack */}
+        {/* Right Side Concept Stack (Responsive) */}
         <ConceptStack 
           concepts={selectedSubject?.concepts || []} 
           isVisible={!!selectedSubjectId} 
+          subjectLabel={selectedSubject?.label}
+          onConceptSelect={handleConceptSelect}
         />
 
         {/* Bottom Controls Area */}
@@ -98,10 +109,10 @@ export default function ScanPage() {
       </main>
       
       {/* Scanning status banner */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 w-max bg-primary/20 backdrop-blur-md border border-primary/30 px-6 py-2 rounded-full pointer-events-none animate-in fade-in slide-in-from-top-4 duration-1000">
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 w-max bg-white/5 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full pointer-events-none animate-in fade-in slide-in-from-top-4 duration-1000">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-white text-xs font-bold tracking-widest uppercase">Calibrating Visual Engine</span>
+          <span className="text-white text-[10px] font-bold tracking-widest uppercase">System Calibrated</span>
         </div>
       </div>
     </div>
