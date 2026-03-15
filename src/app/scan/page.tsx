@@ -15,6 +15,7 @@ import { type SystemStatus } from "@/components/Scan/SystemStatusBadge";
 import { analyzeScene } from "@/ai/flows/analyze-scene-flow";
 import { generateTopics } from "@/ai/flows/generate-topics-flow";
 import { explainConcept } from "@/ai/flows/explain-concept-flow";
+import { generateVisualizations } from "@/ai/flows/generate-visualization-flow";
 import { speak, stopSpeaking } from "@/lib/speech-service";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -48,6 +49,7 @@ export default function ScanPage() {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [selectedConcept, setSelectedConcept] = useState<string | null>(null);
   const [conceptExplanation, setConceptExplanation] = useState<string | null>(null);
+  const [visualizations, setVisualizations] = useState<any[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus>('initializing');
   const [isExplanationOpen, setIsExplanationOpen] = useState(false);
   
@@ -80,33 +82,42 @@ export default function ScanPage() {
     setIsGeneratingExplanation(true);
     setSystemStatus('analyzing');
     stopSpeaking();
-    // Reset explanation sheet state
+    setVisualizations([]); // Clear previous visualizations
     setIsExplanationOpen(false);
 
     try {
-      const result = await explainConcept({
-        objectName: detectedObject,
-        materials: detectedMaterials,
-        visualProperties: detectedVisualProperties,
-        subject: selectedSubject?.label || "",
-        concept: concept
-      });
+      // Run both asynchronously
+      const [explanationResult, vizResult] = await Promise.all([
+        explainConcept({
+          objectName: detectedObject,
+          materials: detectedMaterials,
+          visualProperties: detectedVisualProperties,
+          subject: selectedSubject?.label || "",
+          concept: concept
+        }),
+        generateVisualizations({
+          object: detectedObject,
+          subject: selectedSubject?.label || "",
+          concept: concept
+        })
+      ]);
 
-      setConceptExplanation(result.explanation);
+      setConceptExplanation(explanationResult.explanation);
+      setVisualizations(vizResult.visualizations);
       setSystemStatus('active');
-      speak(result.explanation);
+      speak(explanationResult.explanation);
       
       toast({
         title: "Analysis Ready",
-        description: "Tap the document icon to read the explanation.",
+        description: "Visualizations active. Tap the document icon for full explanation.",
       });
       
     } catch (error) {
-      console.error("Explanation error:", error);
+      console.error("Analysis error:", error);
       toast({
         variant: "destructive",
-        title: "Explanation Failed",
-        description: "Could not generate concept explanation.",
+        title: "Analysis Failed",
+        description: "Could not generate concept details.",
       });
       setSystemStatus('error');
     } finally {
@@ -118,6 +129,7 @@ export default function ScanPage() {
     setSelectedSubjectId(id);
     setSelectedConcept(null);
     setConceptExplanation(null);
+    setVisualizations([]);
     setIsExplanationOpen(false);
     stopSpeaking();
     
@@ -148,6 +160,7 @@ export default function ScanPage() {
     setSystemStatus('analyzing');
     setConceptExplanation(null);
     setSelectedConcept(null);
+    setVisualizations([]);
     setIsExplanationOpen(false);
     stopSpeaking();
 
@@ -216,7 +229,7 @@ export default function ScanPage() {
       {/* Main Content Area */}
       <main className="flex-1 relative">
         <CameraView ref={cameraRef} />
-        <OverlayCanvas status={systemStatus} />
+        <OverlayCanvas status={systemStatus} visualizations={visualizations} />
         
         {/* Right Side Concept Stack */}
         <ConceptStack 
@@ -244,7 +257,7 @@ export default function ScanPage() {
 
         {/* Explanation Dialog Modal */}
         <Dialog open={isExplanationOpen} onOpenChange={setIsExplanationOpen}>
-          <DialogContent className="sm:max-w-[600px] bg-black/90 backdrop-blur-2xl border-white/10 text-white p-0 overflow-hidden shadow-2xl ring-1 ring-white/10">
+          <DialogContent className="sm:max-w-[400px] bg-black/60 backdrop-blur-2xl border-white/10 text-white p-0 overflow-hidden shadow-2xl ring-1 ring-white/10 scale-90 sm:scale-100">
             <div className="h-full flex flex-col">
               <DialogHeader className="p-6 border-b border-white/10 bg-white/5">
                 <div className="flex items-center gap-4">
@@ -261,10 +274,10 @@ export default function ScanPage() {
                   </div>
                 </div>
               </DialogHeader>
-              <ScrollArea className="max-h-[70vh] p-6">
+              <ScrollArea className="h-[400px] p-6">
                 <div className="space-y-6">
                   <div className="space-y-4">
-                    <p className="text-base md:text-lg leading-relaxed font-medium text-white/90">
+                    <p className="text-base leading-relaxed font-medium text-white/90">
                       {conceptExplanation}
                     </p>
                   </div>
