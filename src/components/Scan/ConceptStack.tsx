@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Sparkles, List } from "lucide-react";
+import { Sparkles, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Sheet,
@@ -71,9 +71,9 @@ export function ConceptStack({
           <Button 
             variant="outline" 
             size="icon" 
-            className="w-14 h-14 rounded-full bg-black/60 backdrop-blur-xl border-white/20 text-white shadow-2xl hover:bg-primary hover:border-primary transition-all group"
+            className="w-12 h-12 text-white rounded-full bg-black/50 backdrop-blur-xl border border-white/30 ring-1 ring-black/40 shadow-xl flex items-center justify-center text-white hover:bg-primary/80 hover:border-primary transition-all group"
           >
-            <List size={24} className="text-primary group-hover:text-white" />
+            <Menu size={26} className="text-white group-hover:text-white transition-colors" />
           </Button>
         </SheetTrigger>
         <SheetContent 
