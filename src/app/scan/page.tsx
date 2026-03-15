@@ -8,7 +8,7 @@ import { ConceptStack } from "@/components/Scan/ConceptStack";
 import { VoiceControls } from "@/components/Scan/VoiceControls";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { Camera, ChevronLeft, Loader2, X } from "lucide-react";
+import { Camera, ChevronLeft, Loader2, X, FileText } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
 import { type SystemStatus } from "@/components/Scan/SystemStatusBadge";
@@ -17,7 +17,12 @@ import { generateTopics } from "@/ai/flows/generate-topics-flow";
 import { explainConcept } from "@/ai/flows/explain-concept-flow";
 import { speak, stopSpeaking } from "@/lib/speech-service";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const INITIAL_SUBJECTS = [
   { 
@@ -44,6 +49,7 @@ export default function ScanPage() {
   const [selectedConcept, setSelectedConcept] = useState<string | null>(null);
   const [conceptExplanation, setConceptExplanation] = useState<string | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus>('initializing');
+  const [isExplanationOpen, setIsExplanationOpen] = useState(false);
   
   // AI Detection State
   const [detectedObject, setDetectedObject] = useState<string | null>(null);
@@ -74,6 +80,8 @@ export default function ScanPage() {
     setIsGeneratingExplanation(true);
     setSystemStatus('analyzing');
     stopSpeaking();
+    // Reset explanation sheet state
+    setIsExplanationOpen(false);
 
     try {
       const result = await explainConcept({
@@ -87,6 +95,11 @@ export default function ScanPage() {
       setConceptExplanation(result.explanation);
       setSystemStatus('active');
       speak(result.explanation);
+      
+      toast({
+        title: "Analysis Ready",
+        description: "Tap the document icon to read the explanation.",
+      });
       
     } catch (error) {
       console.error("Explanation error:", error);
@@ -105,6 +118,7 @@ export default function ScanPage() {
     setSelectedSubjectId(id);
     setSelectedConcept(null);
     setConceptExplanation(null);
+    setIsExplanationOpen(false);
     stopSpeaking();
     
     if (systemStatus === 'active') {
@@ -134,10 +148,10 @@ export default function ScanPage() {
     setSystemStatus('analyzing');
     setConceptExplanation(null);
     setSelectedConcept(null);
+    setIsExplanationOpen(false);
     stopSpeaking();
 
     try {
-      // 1. Scene Analysis
       const result = await analyzeScene({ photoDataUri: frame });
       
       setDetectedObject(result.primary_object);
@@ -153,7 +167,6 @@ export default function ScanPage() {
         description: `Detected: ${result.primary_object}`,
       });
 
-      // 2. Topic Generation
       const topics = await generateTopics({
         objectName: result.primary_object,
         materials: result.materials,
@@ -213,36 +226,63 @@ export default function ScanPage() {
           onConceptSelect={handleConceptSelect}
         />
 
-        {/* Explanation Overlay */}
+        {/* Analysis Trigger Button (only visible when explanation exists) */}
         {conceptExplanation && (
-          <div className="absolute inset-x-0 top-24 z-40 px-6 flex justify-center pointer-events-none">
-            <Card className="w-full max-w-2xl bg-black/60 backdrop-blur-xl border-white/10 text-white p-6 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 pointer-events-auto relative">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => {
-                  setConceptExplanation(null);
-                  stopSpeaking();
-                }}
-                className="absolute top-2 right-2 text-white/60 hover:text-white"
-              >
-                <X size={20} />
-              </Button>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-2 h-8 bg-primary rounded-full" />
-                <div>
-                  <h3 className="text-primary text-xs font-black uppercase tracking-widest">{selectedConcept}</h3>
-                  <p className="text-white/60 text-[10px] font-bold uppercase">{selectedSubject?.label} Explanation</p>
-                </div>
-              </div>
-              <ScrollArea className="h-48 md:h-64 pr-4">
-                <p className="text-sm md:text-base leading-relaxed font-medium">
-                  {conceptExplanation}
-                </p>
-              </ScrollArea>
-            </Card>
+          <div className="absolute right-6 top-[20%] lg:top-[30%] z-40 animate-in fade-in zoom-in slide-in-from-right-4 duration-500">
+            <Button
+              onClick={() => setIsExplanationOpen(true)}
+              variant="outline"
+              size="icon"
+              className="w-14 h-14 rounded-full bg-black/60 backdrop-blur-xl border-white/20 text-primary hover:bg-primary hover:text-white transition-all shadow-2xl ring-1 ring-white/10 group"
+            >
+              <FileText size={28} className="group-hover:scale-110 transition-transform" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full animate-pulse border-2 border-black" />
+              <span className="sr-only">Open Analysis</span>
+            </Button>
           </div>
         )}
+
+        {/* Explanation Sheet */}
+        <Sheet open={isExplanationOpen} onOpenChange={setIsExplanationOpen}>
+          <SheetContent 
+            side="right" 
+            className="w-full sm:max-w-md bg-black/90 backdrop-blur-2xl border-white/10 text-white p-0 overflow-hidden"
+          >
+            <div className="h-full flex flex-col">
+              <SheetHeader className="p-6 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-8 bg-primary rounded-full" />
+                  <div>
+                    <SheetTitle className="text-primary text-xs font-black uppercase tracking-widest text-left">
+                      {selectedConcept}
+                    </SheetTitle>
+                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest text-left">
+                      {selectedSubject?.label} Explanation
+                    </p>
+                  </div>
+                </div>
+              </SheetHeader>
+              <ScrollArea className="flex-1 p-6">
+                <div className="space-y-6">
+                  <p className="text-sm md:text-base leading-relaxed font-medium text-white/90">
+                    {conceptExplanation}
+                  </p>
+                  
+                  <div className="pt-6 border-t border-white/5">
+                    <h4 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-3">Contextual Data</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {detectedMaterials.map((m, i) => (
+                        <span key={i} className="px-2 py-1 bg-white/5 rounded-md text-[10px] font-bold text-white/60 uppercase tracking-tighter">
+                          {m}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </ScrollArea>
+            </div>
+          </SheetContent>
+        </Sheet>
 
         {/* Bottom Controls Area */}
         <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 z-40 space-y-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
