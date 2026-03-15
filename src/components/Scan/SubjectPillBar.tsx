@@ -28,7 +28,7 @@ export function SubjectPillBar({ subjects, selectedId, onSelect }: SubjectPillBa
               "px-5 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300 border backdrop-blur-md",
               isSelected 
                 ? "bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105" 
-                : "bg-black/40 text-white/60 border-white/10 hover:bg-black/60 hover:text-white/80"
+                : "bg-black/10 text-white/80 border-white/20 hover:bg-blue/40 hover:text-white"
             )}
           >
             {subject.label}
