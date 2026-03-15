@@ -8,7 +8,7 @@ import { ConceptStack } from "@/components/Scan/ConceptStack";
 import { VoiceControls } from "@/components/Scan/VoiceControls";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { Camera, ChevronLeft, Loader2, X, FileText } from "lucide-react";
+import { Camera, ChevronLeft, Loader2, FileText, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
 import { type SystemStatus } from "@/components/Scan/SystemStatusBadge";
@@ -18,11 +18,11 @@ import { explainConcept } from "@/ai/flows/explain-concept-flow";
 import { speak, stopSpeaking } from "@/lib/speech-service";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const INITIAL_SUBJECTS = [
   { 
@@ -242,47 +242,59 @@ export default function ScanPage() {
           </div>
         )}
 
-        {/* Explanation Sheet */}
-        <Sheet open={isExplanationOpen} onOpenChange={setIsExplanationOpen}>
-          <SheetContent 
-            side="right" 
-            className="w-full sm:max-w-md bg-black/90 backdrop-blur-2xl border-white/10 text-white p-0 overflow-hidden"
-          >
+        {/* Explanation Dialog Modal */}
+        <Dialog open={isExplanationOpen} onOpenChange={setIsExplanationOpen}>
+          <DialogContent className="sm:max-w-[600px] bg-black/90 backdrop-blur-2xl border-white/10 text-white p-0 overflow-hidden shadow-2xl ring-1 ring-white/10">
             <div className="h-full flex flex-col">
-              <SheetHeader className="p-6 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-8 bg-primary rounded-full" />
+              <DialogHeader className="p-6 border-b border-white/10 bg-white/5">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                    <Sparkles className="text-white" size={24} />
+                  </div>
                   <div>
-                    <SheetTitle className="text-primary text-xs font-black uppercase tracking-widest text-left">
+                    <DialogTitle className="text-primary text-sm font-black uppercase tracking-widest text-left">
                       {selectedConcept}
-                    </SheetTitle>
+                    </DialogTitle>
                     <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest text-left">
-                      {selectedSubject?.label} Explanation
+                      STEM {selectedSubject?.label} Insight
                     </p>
                   </div>
                 </div>
-              </SheetHeader>
-              <ScrollArea className="flex-1 p-6">
+              </DialogHeader>
+              <ScrollArea className="max-h-[70vh] p-6">
                 <div className="space-y-6">
-                  <p className="text-sm md:text-base leading-relaxed font-medium text-white/90">
-                    {conceptExplanation}
-                  </p>
+                  <div className="space-y-4">
+                    <p className="text-base md:text-lg leading-relaxed font-medium text-white/90">
+                      {conceptExplanation}
+                    </p>
+                  </div>
                   
-                  <div className="pt-6 border-t border-white/5">
-                    <h4 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-3">Contextual Data</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {detectedMaterials.map((m, i) => (
-                        <span key={i} className="px-2 py-1 bg-white/5 rounded-md text-[10px] font-bold text-white/60 uppercase tracking-tighter">
-                          {m}
-                        </span>
-                      ))}
+                  <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-3">Materials</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {detectedMaterials.map((m, i) => (
+                          <span key={i} className="px-2 py-1 bg-white/5 rounded-md text-[10px] font-bold text-white/60 uppercase tracking-tighter">
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-3">Object</h4>
+                      <span className="px-2 py-1 bg-primary/10 rounded-md text-[10px] font-bold text-primary uppercase tracking-tighter">
+                        {detectedObject}
+                      </span>
                     </div>
                   </div>
                 </div>
               </ScrollArea>
+              <div className="p-4 bg-white/5 text-center">
+                <p className="text-[10px] text-white/20 font-bold uppercase tracking-[0.2em]">Learnscape Visual STEM Engine</p>
+              </div>
             </div>
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
 
         {/* Bottom Controls Area */}
         <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 z-40 space-y-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
