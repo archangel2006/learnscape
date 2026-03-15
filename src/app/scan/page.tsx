@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -9,13 +8,16 @@ import { ConceptStack } from "@/components/Scan/ConceptStack";
 import { VoiceControls } from "@/components/Scan/VoiceControls";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { Camera, ChevronLeft, Loader2 } from "lucide-react";
+import { Camera, ChevronLeft, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
 import { type SystemStatus } from "@/components/Scan/SystemStatusBadge";
 import { analyzeScene } from "@/ai/flows/analyze-scene-flow";
 import { generateTopics } from "@/ai/flows/generate-topics-flow";
+import { explainConcept } from "@/ai/flows/explain-concept-flow";
 import { speak, stopSpeaking } from "@/lib/speech-service";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
 
 const INITIAL_SUBJECTS = [
   { 
@@ -39,6 +41,8 @@ export default function ScanPage() {
   const cameraRef = useRef<CameraViewHandle>(null);
   const [subjects, setSubjects] = useState(INITIAL_SUBJECTS);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [selectedConcept, setSelectedConcept] = useState<string | null>(null);
+  const [conceptExplanation, setConceptExplanation] = useState<string | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus>('initializing');
   
   // AI Detection State
@@ -48,6 +52,7 @@ export default function ScanPage() {
   const [detectedVisualProperties, setDetectedVisualProperties] = useState<string[]>([]);
   const [confidenceScore, setConfidenceScore] = useState<number>(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGeneratingExplanation, setIsGeneratingExplanation] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -62,30 +67,52 @@ export default function ScanPage() {
 
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
 
-  const handleConceptSelect = (concept: string) => {
+  const handleConceptSelect = async (concept: string) => {
+    if (!detectedObject || isGeneratingExplanation) return;
+    
+    setSelectedConcept(concept);
+    setIsGeneratingExplanation(true);
     setSystemStatus('analyzing');
-    toast({
-      title: "Concept Selected",
-      description: `Analyzing: ${concept} in real-time.`,
-    });
-    
-    // Voice guidance for concept selection
-    speak(`Explaining the concept of ${concept} now.`);
-    
-    setTimeout(() => {
+    stopSpeaking();
+
+    try {
+      const result = await explainConcept({
+        objectName: detectedObject,
+        materials: detectedMaterials,
+        visualProperties: detectedVisualProperties,
+        subject: selectedSubject?.label || "",
+        concept: concept
+      });
+
+      setConceptExplanation(result.explanation);
       setSystemStatus('active');
-    }, 1500);
+      speak(result.explanation);
+      
+    } catch (error) {
+      console.error("Explanation error:", error);
+      toast({
+        variant: "destructive",
+        title: "Explanation Failed",
+        description: "Could not generate concept explanation.",
+      });
+      setSystemStatus('error');
+    } finally {
+      setIsGeneratingExplanation(false);
+    }
   };
 
   const handleSubjectSelect = (id: string) => {
     setSelectedSubjectId(id);
+    setSelectedConcept(null);
+    setConceptExplanation(null);
+    stopSpeaking();
+    
     if (systemStatus === 'active') {
       setSystemStatus('ready');
     }
     
     const subject = subjects.find(s => s.id === id);
     if (subject) {
-      // Voice guidance for subject selection
       speak(`You selected ${subject.label}. Here are some ${subject.label} concepts related to this object. Which one would you like to explore?`);
     }
   };
@@ -105,7 +132,9 @@ export default function ScanPage() {
 
     setIsAnalyzing(true);
     setSystemStatus('analyzing');
-    stopSpeaking(); // Cancel any current speech when starting a new scan
+    setConceptExplanation(null);
+    setSelectedConcept(null);
+    stopSpeaking();
 
     try {
       // 1. Scene Analysis
@@ -121,7 +150,7 @@ export default function ScanPage() {
       
       toast({
         title: "Object Identified",
-        description: `Detected: ${result.primary_object} (${Math.round(result.confidence * 100)}% confidence)`,
+        description: `Detected: ${result.primary_object}`,
       });
 
       // 2. Topic Generation
@@ -137,7 +166,6 @@ export default function ScanPage() {
         { id: 'mathematics', label: 'Mathematics', concepts: topics.mathematics },
       ]);
 
-      // Voice guidance after object detection and topic generation
       speak(`I see a ${result.primary_object}. Would you like to explore the physics, chemistry, or mathematics behind it?`);
 
     } catch (error) {
@@ -185,6 +213,37 @@ export default function ScanPage() {
           onConceptSelect={handleConceptSelect}
         />
 
+        {/* Explanation Overlay */}
+        {conceptExplanation && (
+          <div className="absolute inset-x-0 top-24 z-40 px-6 flex justify-center pointer-events-none">
+            <Card className="w-full max-w-2xl bg-black/60 backdrop-blur-xl border-white/10 text-white p-6 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 pointer-events-auto relative">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => {
+                  setConceptExplanation(null);
+                  stopSpeaking();
+                }}
+                className="absolute top-2 right-2 text-white/60 hover:text-white"
+              >
+                <X size={20} />
+              </Button>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-2 h-8 bg-primary rounded-full" />
+                <div>
+                  <h3 className="text-primary text-xs font-black uppercase tracking-widest">{selectedConcept}</h3>
+                  <p className="text-white/60 text-[10px] font-bold uppercase">{selectedSubject?.label} Explanation</p>
+                </div>
+              </div>
+              <ScrollArea className="h-48 md:h-64 pr-4">
+                <p className="text-sm md:text-base leading-relaxed font-medium">
+                  {conceptExplanation}
+                </p>
+              </ScrollArea>
+            </Card>
+          </div>
+        )}
+
         {/* Bottom Controls Area */}
         <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 z-40 space-y-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
           
@@ -205,11 +264,11 @@ export default function ScanPage() {
               <div className="absolute inset-0 bg-primary rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity" />
               <Button 
                 onClick={handleCapture}
-                disabled={isAnalyzing}
+                disabled={isAnalyzing || isGeneratingExplanation}
                 size="icon" 
                 className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90 shadow-xl relative z-10 border-4 border-white/20"
               >
-                {isAnalyzing ? <Loader2 size={32} className="animate-spin" /> : <Camera size={32} />}
+                {(isAnalyzing || isGeneratingExplanation) ? <Loader2 size={32} className="animate-spin" /> : <Camera size={32} />}
               </Button>
             </div>
             
