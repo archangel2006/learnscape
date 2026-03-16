@@ -42,6 +42,7 @@ Instructions:
 - Explain the concept in a friendly, conversational way.
 - Relate the explanation directly to the identified object.
 - Avoid textbook-style language; use clear sentences suitable for speech.
+- Limit the response to 100–120 words maximum.
 
 Structure:
 1. A short introduction referencing the object.
