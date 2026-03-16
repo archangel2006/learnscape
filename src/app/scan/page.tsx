@@ -16,6 +16,7 @@ import { analyzeScene, type AnalyzeSceneOutput } from "@/ai/flows/analyze-scene-
 import { generateTopics } from "@/ai/flows/generate-topics-flow";
 import { explainConcept } from "@/ai/flows/explain-concept-flow";
 import { generateVisualizations } from "@/ai/flows/generate-visualization-flow";
+import { voiceQueryForScannedObject } from "@/ai/flows/voice-query-for-scanned-object-flow";
 import { speak, stopSpeaking } from "@/lib/speech-service";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -85,7 +86,6 @@ export default function ScanPage() {
     setIsExplanationOpen(false);
 
     try {
-      // Reuse sceneAnalysis context - NO vision model call here
       const [explanationResult, vizResult] = await Promise.all([
         explainConcept({
           analysis: {
@@ -123,6 +123,56 @@ export default function ScanPage() {
         description: "Could not generate concept details.",
       });
       setSystemStatus('error');
+    } finally {
+      setIsGeneratingExplanation(false);
+    }
+  };
+
+  const handleVoiceQuery = async (query: string) => {
+    if (!sceneAnalysis || isGeneratingExplanation) return;
+
+    setSystemStatus('analyzing');
+    stopSpeaking();
+    setIsGeneratingExplanation(true);
+    setConceptExplanation(null);
+    setSelectedConcept("Voice Query");
+    setVisualizations([]);
+
+    try {
+      const contextStr = `Object: ${sceneAnalysis.primary_object}. Materials: ${sceneAnalysis.materials.join(', ')}. Visual Properties: ${sceneAnalysis.visual_properties.join(', ')}. Currently selected subject: ${selectedSubject?.label || 'General'}.`;
+      
+      const [response, vizResult] = await Promise.all([
+        voiceQueryForScannedObject({
+          voiceQuery: query,
+          scannedObjectInfo: contextStr
+        }),
+        generateVisualizations({
+          analysis: {
+            primary_object: sceneAnalysis.primary_object,
+          },
+          subject: selectedSubject?.label || "Physics", // Fallback to physics for generic viz
+          concept: query
+        })
+      ]);
+
+      setConceptExplanation(response.explanation);
+      setVisualizations(vizResult.visualizations);
+      setSystemStatus('active');
+      speak(response.explanation);
+
+      toast({
+        title: "Voice Response Ready",
+        description: "Answering your question about the object.",
+      });
+
+    } catch (error) {
+      console.error("Voice query error:", error);
+      setSystemStatus('error');
+      toast({
+        variant: "destructive",
+        title: "Query Failed",
+        description: "Could not process your voice request.",
+      });
     } finally {
       setIsGeneratingExplanation(false);
     }
@@ -169,7 +219,6 @@ export default function ScanPage() {
     stopSpeaking();
 
     try {
-      // Step 1: Vision Analysis (ONLY run here)
       const analysis = await analyzeScene({ photoDataUri: frame });
       setSceneAnalysis(analysis);
       
@@ -180,7 +229,6 @@ export default function ScanPage() {
         description: `Detected: ${analysis.primary_object}`,
       });
 
-      // Step 2: Topic Generation (Uses Analysis Result)
       const topics = await generateTopics({
         analysis: {
           primary_object: analysis.primary_object,
@@ -195,7 +243,7 @@ export default function ScanPage() {
         { id: 'mathematics', label: 'Mathematics', concepts: topics.mathematics },
       ]);
 
-      speak(`I see a ${analysis.primary_object}. Would you like to explore the physics, chemistry, or mathematics behind it?`);
+      speak(`I see a ${analysis.primary_object}. Would you like to explore the physics, chemistry, or mathematics behind it? You can also ask me a specific question using the microphone.`);
 
     } catch (error) {
       console.error("Detection error:", error);
@@ -267,12 +315,12 @@ export default function ScanPage() {
                   <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                     <Sparkles className="text-white" size={24} />
                   </div>
-                  <div>
-                    <DialogTitle className="text-primary text-sm font-black uppercase tracking-widest text-left">
+                  <div className="flex-1 overflow-hidden">
+                    <DialogTitle className="text-primary text-sm font-black uppercase tracking-widest text-left truncate">
                       {selectedConcept}
                     </DialogTitle>
                     <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest text-left">
-                      STEM {selectedSubject?.label} Insight
+                      STEM {selectedSubject?.label || 'General'} Insight
                     </p>
                   </div>
                 </div>
@@ -325,7 +373,10 @@ export default function ScanPage() {
           </div>
 
           <div className="flex items-center justify-between max-w-md mx-auto">
-            <VoiceControls />
+            <VoiceControls 
+              onQuery={handleVoiceQuery}
+              disabled={!sceneAnalysis || isAnalyzing || isGeneratingExplanation}
+            />
             
             <div className="relative group">
               <div className="absolute inset-0 bg-primary rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity" />
