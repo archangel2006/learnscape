@@ -16,32 +16,6 @@ Learnscape is an AI-powered visual learning system that helps users explore the 
 
 ---
 
-## 🧪 Reproducible Testing
-
-To ensure the system functions correctly, follow these testing steps:
-
-### 1. Environment Setup
-- Ensure you have a valid `GEMINI_API_KEY` in your `.env` file.
-- Run `npm install` to install dependencies.
-- Start the development server: `npm run dev`.
-
-### 2. AI Flow Testing
-- Open the Genkit Developer UI: `npm run genkit:dev`.
-- Test individual flows like `analyzeSceneFlow` by providing a sample image data URI.
-- Verify that `generateTopicsFlow` and `explainConceptFlow` return structured JSON as expected.
-
-### 3. End-to-End App Testing
-- Navigate to `http://localhost:9002/scan`.
-- **Camera Access**: Grant camera permissions when prompted. If on desktop, use a webcam.
-- **Object Capture**: Point the camera at a distinct object (e.g., a mug, a plant, a keyboard) and click the camera button.
-- **Verification**: 
-    - Check that "Object Detected" status appears.
-    - Confirm STEM subjects (Physics, Chemistry, Math) appear at the bottom.
-    - Select a subject and then a concept; verify that voice narration starts and visual overlays appear on the canvas.
-- **Voice Query**: Click the microphone icon, wait for "Listening...", and ask a question like "How is this made?". Verify the AI provides a contextual response.
-
----
-
 ## 🤖 Generative AI Approach
 
 Learnscape uses multimodal generative AI to dynamically create contextual learning content.
@@ -115,6 +89,30 @@ Learnscape uses multimodal generative AI to dynamically create contextual learni
 | **Infrastructure** | Firebase Hosting, Cloud Run / Cloud Functions |
 
 ---
+
+## 🧪 Reproducible Testing
+
+To ensure the system functions correctly, follow these testing steps:
+
+### 1. Environment Setup
+- Ensure you have a valid `GEMINI_API_KEY` in your `.env` file.
+- Run `npm install` to install dependencies.
+- Start the development server: `npm run dev`.
+
+### 2. AI Flow Testing
+- Open the Genkit Developer UI: `npm run genkit:dev`.
+- Test individual flows like `analyzeSceneFlow` by providing a sample image data URI.
+- Verify that `generateTopicsFlow` and `explainConceptFlow` return structured JSON as expected.
+
+### 3. End-to-End App Testing
+- Navigate to `http://localhost:9002/scan`.
+- **Camera Access**: Grant camera permissions when prompted. If on desktop, use a webcam.
+- **Object Capture**: Point the camera at a distinct object (e.g., a mug, a plant, a keyboard) and click the camera button.
+- **Verification**: 
+    - Check that "Object Detected" status appears.
+    - Confirm STEM subjects (Physics, Chemistry, Math) appear at the bottom.
+    - Select a subject and then a concept; verify that voice narration starts and visual overlays appear on the canvas.
+- **Voice Query**: Click the microphone icon, wait for "Listening...", and ask a question like "How is this made?". Verify the AI provides a contextual response.
 
 ---
 
