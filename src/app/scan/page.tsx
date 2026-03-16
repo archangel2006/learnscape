@@ -12,7 +12,7 @@ import { Camera, ChevronLeft, Loader2, FileText, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
 import { type SystemStatus } from "@/components/Scan/SystemStatusBadge";
-import { analyzeScene } from "@/ai/flows/analyze-scene-flow";
+import { analyzeScene, type AnalyzeSceneOutput } from "@/ai/flows/analyze-scene-flow";
 import { generateTopics } from "@/ai/flows/generate-topics-flow";
 import { explainConcept } from "@/ai/flows/explain-concept-flow";
 import { generateVisualizations } from "@/ai/flows/generate-visualization-flow";
@@ -45,6 +45,8 @@ const INITIAL_SUBJECTS = [
 
 export default function ScanPage() {
   const cameraRef = useRef<CameraViewHandle>(null);
+  
+  // Application State
   const [subjects, setSubjects] = useState(INITIAL_SUBJECTS);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [selectedConcept, setSelectedConcept] = useState<string | null>(null);
@@ -53,12 +55,9 @@ export default function ScanPage() {
   const [systemStatus, setSystemStatus] = useState<SystemStatus>('initializing');
   const [isExplanationOpen, setIsExplanationOpen] = useState(false);
   
-  // AI Detection State
-  const [detectedObject, setDetectedObject] = useState<string | null>(null);
-  const [detectedSecondaryElements, setDetectedSecondaryElements] = useState<string[]>([]);
-  const [detectedMaterials, setDetectedMaterials] = useState<string[]>([]);
-  const [detectedVisualProperties, setDetectedVisualProperties] = useState<string[]>([]);
-  const [confidenceScore, setConfidenceScore] = useState<number>(0);
+  // Scene Analysis Context (REUSED)
+  const [sceneAnalysis, setSceneAnalysis] = useState<AnalyzeSceneOutput | null>(null);
+  
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingExplanation, setIsGeneratingExplanation] = useState(false);
 
@@ -76,27 +75,31 @@ export default function ScanPage() {
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
 
   const handleConceptSelect = async (concept: string) => {
-    if (!detectedObject || isGeneratingExplanation) return;
+    if (!sceneAnalysis || isGeneratingExplanation) return;
     
     setSelectedConcept(concept);
     setIsGeneratingExplanation(true);
     setSystemStatus('analyzing');
     stopSpeaking();
-    setVisualizations([]); // Clear previous visualizations
+    setVisualizations([]);
     setIsExplanationOpen(false);
 
     try {
-      // Run both asynchronously
+      // Reuse sceneAnalysis context - NO vision model call here
       const [explanationResult, vizResult] = await Promise.all([
         explainConcept({
-          objectName: detectedObject,
-          materials: detectedMaterials,
-          visualProperties: detectedVisualProperties,
+          analysis: {
+            primary_object: sceneAnalysis.primary_object,
+            materials: sceneAnalysis.materials,
+            visual_properties: sceneAnalysis.visual_properties,
+          },
           subject: selectedSubject?.label || "",
           concept: concept
         }),
         generateVisualizations({
-          object: detectedObject,
+          analysis: {
+            primary_object: sceneAnalysis.primary_object,
+          },
           subject: selectedSubject?.label || "",
           concept: concept
         })
@@ -113,7 +116,7 @@ export default function ScanPage() {
       });
       
     } catch (error) {
-      console.error("Analysis error:", error);
+      console.error("Explanation error:", error);
       toast({
         variant: "destructive",
         title: "Analysis Failed",
@@ -162,28 +165,28 @@ export default function ScanPage() {
     setSelectedConcept(null);
     setVisualizations([]);
     setIsExplanationOpen(false);
+    setSceneAnalysis(null);
     stopSpeaking();
 
     try {
-      const result = await analyzeScene({ photoDataUri: frame });
-      
-      setDetectedObject(result.primary_object);
-      setDetectedSecondaryElements(result.secondary_elements);
-      setDetectedMaterials(result.materials);
-      setDetectedVisualProperties(result.visual_properties);
-      setConfidenceScore(result.confidence);
+      // Step 1: Vision Analysis (ONLY run here)
+      const analysis = await analyzeScene({ photoDataUri: frame });
+      setSceneAnalysis(analysis);
       
       setSystemStatus('active');
       
       toast({
         title: "Object Identified",
-        description: `Detected: ${result.primary_object}`,
+        description: `Detected: ${analysis.primary_object}`,
       });
 
+      // Step 2: Topic Generation (Uses Analysis Result)
       const topics = await generateTopics({
-        objectName: result.primary_object,
-        materials: result.materials,
-        visualProperties: result.visual_properties,
+        analysis: {
+          primary_object: analysis.primary_object,
+          materials: analysis.materials,
+          visual_properties: analysis.visual_properties,
+        },
       });
 
       setSubjects([
@@ -192,10 +195,10 @@ export default function ScanPage() {
         { id: 'mathematics', label: 'Mathematics', concepts: topics.mathematics },
       ]);
 
-      speak(`I see a ${result.primary_object}. Would you like to explore the physics, chemistry, or mathematics behind it?`);
+      speak(`I see a ${analysis.primary_object}. Would you like to explore the physics, chemistry, or mathematics behind it?`);
 
     } catch (error) {
-      console.error("Analysis error:", error);
+      console.error("Detection error:", error);
       setSystemStatus('error');
       toast({
         variant: "destructive",
@@ -239,7 +242,7 @@ export default function ScanPage() {
           onConceptSelect={handleConceptSelect}
         />
 
-        {/* Analysis Trigger Button (only visible when explanation exists) */}
+        {/* Analysis Trigger Button */}
         {conceptExplanation && (
           <div className="absolute right-6 top-[20%] lg:top-[30%] z-40 animate-in fade-in zoom-in slide-in-from-right-4 duration-500">
             <Button
@@ -282,24 +285,26 @@ export default function ScanPage() {
                     </p>
                   </div>
                   
-                  <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-3">Materials</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {detectedMaterials.map((m, i) => (
-                          <span key={i} className="px-2 py-1 bg-white/5 rounded-md text-[10px] font-bold text-white/60 uppercase tracking-tighter">
-                            {m}
-                          </span>
-                        ))}
+                  {sceneAnalysis && (
+                    <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-3">Materials</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {sceneAnalysis.materials.map((m, i) => (
+                            <span key={i} className="px-2 py-1 bg-white/5 rounded-md text-[10px] font-bold text-white/60 uppercase tracking-tighter">
+                              {m}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-3">Object</h4>
+                        <span className="px-2 py-1 bg-primary/10 rounded-md text-[10px] font-bold text-primary uppercase tracking-tighter">
+                          {sceneAnalysis.primary_object}
+                        </span>
                       </div>
                     </div>
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-3">Object</h4>
-                      <span className="px-2 py-1 bg-primary/10 rounded-md text-[10px] font-bold text-primary uppercase tracking-tighter">
-                        {detectedObject}
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </ScrollArea>
               <div className="p-4 bg-white/5 text-center">
@@ -311,8 +316,6 @@ export default function ScanPage() {
 
         {/* Bottom Controls Area */}
         <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 z-40 space-y-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-          
-          {/* Dynamic Subject Bar */}
           <div className="flex justify-center">
             <SubjectPillBar 
               subjects={subjects} 
@@ -321,7 +324,6 @@ export default function ScanPage() {
             />
           </div>
 
-          {/* Main Action Bar */}
           <div className="flex items-center justify-between max-w-md mx-auto">
             <VoiceControls />
             
@@ -337,7 +339,7 @@ export default function ScanPage() {
               </Button>
             </div>
             
-            <div className="w-14 h-14" /> {/* Symmetry Spacer */}
+            <div className="w-14 h-14" />
           </div>
         </div>
       </main>
