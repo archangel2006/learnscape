@@ -116,5 +116,35 @@ Learnscape uses multimodal generative AI to dynamically create contextual learni
 
 ---
 
-## License
-MIT
+---
+
+##  ⚡ How It Works
+
+1. User points the camera at an object.
+2. The system analyzes the object using AI vision models.
+3. The AI determines relevant STEM domains.
+4. Users choose a concept to explore.
+5. The system generates explanations and diagram overlays.
+6. Users can ask follow-up questions using voice interaction.
+
+---
+
+## 🌱 Example Use Cases
+
+- Understanding rotational motion by scanning a bicycle wheel
+- Exploring structural forces in bridges and buildings
+- Learning photosynthesis by scanning plant leaves
+- Observing chemical reactions such as rust and corrosion
+
+---
+
+## 🔮 Future Improvements
+
+- More advanced physics and chemistry simulations
+- Adaptive learning paths personalized to the user
+- Expanded STEM concept coverage
+- Saving & Downloading scenes and conversations
+
+---
+
+
