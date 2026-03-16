@@ -32,22 +32,52 @@ Generative AI enables Learnscape to generate educational explanations for any re
 ## 🏗 System Architecture
 
 ```
-User Camera Input  
-      ↓  
-Frontend Interface (Camera + Overlay)
-      ↓  
-Frame Capture  
-      ↓  
-Vision Model Analysis  
-      ↓  
-AI Agent Reasoning  
-      ↓  
-Concept Selection  
-      ↓  
-Generated Outputs  
-• Voice explanation  
-• Diagram overlays  
-• Concept summaries  
+                  Users (Learners / Students)
+                                |
+                                ▼
+                 Frontend (Next.js Web Interface)
+               - Camera Feed (Web Camera API)
+               - Canvas Overlay Visualization
+               - Concept Selection UI
+               - Voice Interaction (Web Speech API)
+                                |
+                                ▼
+                 Server Actions (Next.js Backend)
+               - Handles AI requests
+               - Manages scene analysis state
+               - Coordinates AI pipeline
+                                |
+         ├───────────────────────────────────────────────┐
+         ▼                                               ▼
+ Vision & Scene Understanding                    AI Reasoning Layer
+ (Object Detection)                              (Genkit + Gemini)
+
+- Detect objects in camera frame                - Topic Generation
+- Extract scene properties                      - Concept Explanation
+- Identify materials & shapes                   - Educational reasoning
+- Generate structured scene data                - Conversational responses
+
+        │                                               │
+        ▼                                               ▼
+     Scene Analysis Data                           Explanation Output
+   (Object, Materials, Properties)               STEM Concept Explanation
+        │                                               │
+        └───────────────────────┬───────────────────────┘
+                                ▼
+                      Visualization Engine
+                    (Canvas / SVG Rendering)
+
+                  - Concept animations
+                  - Visual overlays
+                  - Interactive learning cues
+                                │
+                                ▼
+                     Voice Narration Layer
+                       (Text-to-Speech)
+
+                  - AI explanation spoken aloud
+                  - Hands-free learning interaction
+
 ```
 ---
 
