@@ -4,6 +4,13 @@ Turn the world into your classroom.
 Learnscape is an AI-powered visual learning system that helps users explore the physics, chemistry, and mathematics behind real-world objects. By pointing a camera at everyday objects, the system analyzes them using multimodal AI and generates contextual explanations, diagrams, and voice interactions to turn the environment into an interactive STEM learning experience.
 
 ---
+## Deployed
+https://learnscape-sage.vercel.app/
+
+**⚠️ Note**: This project uses AI APIs with limited quota.
+Please avoid excessive usage unless you are evaluating the project.
+
+---
 
 ##  🚀 Core Features
 
@@ -77,6 +84,11 @@ Learnscape uses multimodal generative AI to dynamically create contextual learni
                   - Hands-free learning interaction
 
 ```
+---
+## Agent Architecture
+
+<img width="1408" height="768" alt="Gemini_Generated_Image_n25gnkn25gnkn25g" src="https://github.com/user-attachments/assets/6e37da20-773e-4650-b129-3cc3f8cc5086" />
+
 ---
 
 ## 🛠 Tech Stack
