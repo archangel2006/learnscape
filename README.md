@@ -33,6 +33,11 @@ Learnscape uses multimodal generative AI to dynamically create contextual learni
 4. **Generated Outputs**: The system produces voice explanations, concept summaries, visual diagram overlays, and chemical reaction visualizations.
 
 ---
+## Agent Architecture
+
+<img width="1408" height="768" alt="Gemini_Generated_Image_n25gnkn25gnkn25g" src="https://github.com/user-attachments/assets/6e37da20-773e-4650-b129-3cc3f8cc5086" />
+
+---
 
 ## 🏗 System Architecture
 
@@ -85,17 +90,12 @@ Learnscape uses multimodal generative AI to dynamically create contextual learni
 
 ```
 ---
-## Agent Architecture
-
-<img width="1408" height="768" alt="Gemini_Generated_Image_n25gnkn25gnkn25g" src="https://github.com/user-attachments/assets/6e37da20-773e-4650-b129-3cc3f8cc5086" />
-
----
 
 ## 🛠 Tech Stack
 
 | Layer | Technologies |
 |------|-------------|
-| **Frontend** | Next.js, HTML Canvas / SVG Overlays, Web Camera API, Web Speech API |
+| **Frontend** | Next.js, HTML Canvas, Web Camera API, Web Speech API |
 | **Backend** | Node.js, Genkit AI Framework |
 | **AI Models** | Gemini API, Multimodal LLM, Vision Models, Speech-to-Text, Text-to-Speech |
 | **Infrastructure** | Firebase Hosting, Cloud Run / Cloud Functions |
