@@ -16,6 +16,32 @@ Learnscape is an AI-powered visual learning system that helps users explore the 
 
 ---
 
+## 🧪 Reproducible Testing
+
+To ensure the system functions correctly, follow these testing steps:
+
+### 1. Environment Setup
+- Ensure you have a valid `GEMINI_API_KEY` in your `.env` file.
+- Run `npm install` to install dependencies.
+- Start the development server: `npm run dev`.
+
+### 2. AI Flow Testing
+- Open the Genkit Developer UI: `npm run genkit:dev`.
+- Test individual flows like `analyzeSceneFlow` by providing a sample image data URI.
+- Verify that `generateTopicsFlow` and `explainConceptFlow` return structured JSON as expected.
+
+### 3. End-to-End App Testing
+- Navigate to `http://localhost:9002/scan`.
+- **Camera Access**: Grant camera permissions when prompted. If on desktop, use a webcam.
+- **Object Capture**: Point the camera at a distinct object (e.g., a mug, a plant, a keyboard) and click the camera button.
+- **Verification**: 
+    - Check that "Object Detected" status appears.
+    - Confirm STEM subjects (Physics, Chemistry, Math) appear at the bottom.
+    - Select a subject and then a concept; verify that voice narration starts and visual overlays appear on the canvas.
+- **Voice Query**: Click the microphone icon, wait for "Listening...", and ask a question like "How is this made?". Verify the AI provides a contextual response.
+
+---
+
 ## 🤖 Generative AI Approach
 
 Learnscape uses multimodal generative AI to dynamically create contextual learning content.
@@ -24,8 +50,6 @@ Learnscape uses multimodal generative AI to dynamically create contextual learni
 2. **Language Model Reasoning**: A large language model interprets the detected object and determines relevant STEM concepts.
 3. **Agent-Based Logic**: An AI agent selects appropriate domains such as physics, chemistry, or mathematics and decides which concepts to explain.
 4. **Generated Outputs**: The system produces voice explanations, concept summaries, visual diagram overlays, and chemical reaction visualizations.
-
-Generative AI enables Learnscape to generate educational explanations for any real-world object instead of relying on predefined content.
 
 ---
 
@@ -92,33 +116,5 @@ Generative AI enables Learnscape to generate educational explanations for any re
 
 ---
 
-##  ⚡ How It Works
-
-1. User points the camera at an object.
-2. The system analyzes the object using AI vision models.
-3. The AI determines relevant STEM domains.
-4. Users choose a concept to explore.
-5. The system generates explanations and diagram overlays.
-6. Users can ask follow-up questions using voice interaction.
-
----
-
-## 🌱 Example Use Cases
-
-- Understanding rotational motion by scanning a bicycle wheel
-- Exploring structural forces in bridges and buildings
-- Learning photosynthesis by scanning plant leaves
-- Observing chemical reactions such as rust and corrosion
-
----
-
-## 🔮 Future Improvements
-
-- Real-time AR object tracking
-- Expanded STEM concept coverage
-- Personalized learning paths
-- Integration with educational platforms
-
----
-
 ## License
+MIT
