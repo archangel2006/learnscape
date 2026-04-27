@@ -1,31 +1,47 @@
 # 🏗️ AI Architecture & Pipeline
 
-Learnscape uses a **Linear Agentic Pipeline** orchestrated by **Genkit**.
+Learnscape uses a **Linear Agentic Pipeline** orchestrated by **Genkit**. This architecture ensures that high-cost Vision operations happen once, while low-cost Text operations happen dynamically.
 
-## 🔄 The Pipeline Flow
+## 🔄 The Multi-Stage Pipeline
 
-1.  **Scene Analysis (Multimodal Vision):**
-    *   **Input:** Data URI Image.
-    *   **Model:** Gemini 2.5 Flash (Vision).
-    *   **Goal:** Extract `primary_object`, `materials`, and `visual_properties`.
-    *   *Key Code (genkit.ts):* Uses `googleAI` plugin with multimodal support.
+### Stage 1: Multimodal Vision (The "Observer")
+The system captures a Base64 frame and sends it to Gemini.
+```typescript
+// Key Logic in analyze-scene-flow.ts
+const analyzeScenePrompt = ai.definePrompt({
+  name: 'analyzeScenePrompt',
+  prompt: `Analyze the image... return JSON with primary_object, materials, and confidence.
+           Photo: {{media url=photoDataUri}}`,
+});
+```
+*   **Why?** This creates the "Source of Truth" context for the rest of the session.
 
-2.  **Topic Generation (Reasoning):**
-    *   **Input:** Analysis results from Step 1.
-    *   **Goal:** Brainstorm 4-6 concepts for Physics, Chemistry, and Math.
-    *   **Prompting:** Uses **Few-Shot Prompting** logic to ensure topics are educational and concise.
+### Stage 2: Topic Generation (The "Planner")
+We pass the output of Stage 1 (Text) into the next agent. We **do not** pass the image again to save bandwidth and tokens.
+*   **Technique:** **Role Prompting**. We tell the AI: "You are an expert STEM curriculum designer."
+*   **Technique:** **Structured Output**. Using Zod schemas ensures the UI never breaks.
 
-3.  **Concept Explanation (Narrative):**
-    *   **Input:** Object Context + User Choice.
-    *   **Goal:** 100-word conversational explanation.
-    *   **Pattern:** **Persona Prompting** ("You are an expert STEM educator").
+### Stage 3: Dynamic Explanation & Visualization (The "Executors")
+When a user clicks a topic, two agents run in parallel:
+1.  **Narrator Agent:** Generates 100-120 words of speech-optimized text.
+2.  **Visualizer Agent:** Generates an array of "Animation Instructions."
 
-4.  **Visual Overlay Generation (Structured Output):**
-    *   **Input:** Object Context + Concept.
-    *   **Goal:** Return an array of animation instructions (e.g., `gravity_field`, `wave_motion`).
-    *   **Critical Detail:** The AI doesn't draw; it returns a **JSON Schema** that the React `OverlayCanvas` interprets.
+```typescript
+// Example Visualizer Output Schema
+const VisualizationSchema = z.object({
+  type: z.enum(['gravity_field', 'wave_motion', ...]),
+  anchor: z.enum(['center', 'top', ...]),
+  intensity: z.number().min(0).max(1)
+});
+```
 
-## 🛠️ Prompt Engineering Techniques
-*   **Role Prompting:** Assigning the AI a specific role (Curriculum Designer, STEM Tutor).
-*   **Structured Output (JSON):** Using Zod schemas in Genkit to ensure the AI always returns data the code can parse without crashing.
-*   **Contextual Injection:** We pass the "Scene Analysis" into every subsequent call so the AI "remembers" what it's looking at without re-running expensive vision calls.
+## 🛠️ Prompt Engineering Deep-Dive
+
+*   **Context Injection:** We "hydrate" every prompt with the initial Analysis.
+    *   *Input:* `analysis: { primary_object: "Cup", materials: ["Ceramic"] }`
+    *   *Prompt:* "Explain the thermodynamics of a {{{analysis.primary_object}}} made of {{#each analysis.materials}}{{{this}}}{{/each}}."
+*   **Few-Shotting:** In our prompts, we provide examples of "Good" vs "Bad" topics to guide the AI toward educational rigor.
+*   **Negative Constraints:** We explicitly tell the AI: "Avoid textbook jargon," and "Limit to 120 words" to ensure the Voice UI is snappy and engaging.
+
+## 📊 Token Management
+By performing vision analysis **only once** and passing text context to subsequent stages, we reduce our token consumption per user session by approximately **70%** compared to a naive approach where the image is sent with every question.

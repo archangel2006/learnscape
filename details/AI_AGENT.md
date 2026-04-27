@@ -1,26 +1,24 @@
 # 🤖 What is an AI Agent?
 
-In the context of **Learnscape**, an AI Agent is more than just a chatbot; it's a **reasoning engine** that uses a Large Language Model (LLM) to achieve specific goals by observing its environment and taking actions.
+In the context of **Learnscape**, an AI Agent is a **reasoning engine** that leverages a Large Language Model (LLM) to achieve specific goals by observing its environment and taking autonomous actions.
 
-## 🧠 Key Concepts
+## 🧠 Core Concepts
 
-### 1. The Reasoning Engine
-An agent uses models like **Gemini 2.5 Flash** as its "brain." Instead of just predicting the next word, it follows logic to solve a task (e.g., "Identify this object, then find its physics properties").
+### 1. Agency vs. Automation
+*   **Automation:** A fixed script that always does X when Y happens (e.g., a "Contact Us" form).
+*   **Agency:** The ability to determine *how* to solve a problem based on a high-level goal. In Learnscape, the agent doesn't just "show a label"; it reasons about *which* STEM domain (Physics vs. Math) is most relevant to the pixels it sees.
 
-### 2. Design Patterns used in Agents
-*   **Chain-of-Thought (CoT):** This is when we prompt the AI to "think step-by-step." In Learnscape, the AI first analyzes the image, *then* breaks down the materials, and *then* derives the STEM topics.
-*   **ReAct (Reason + Act):** While Learnscape uses a structured pipeline, the agent "acts" by generating structured JSON that the frontend "executes" (like drawing on the canvas).
-*   **Sequential Multi-Agent System:** You can think of Learnscape as a team of specialized mini-agents:
-    *   **The Vision Agent:** Analyzes the scene.
-    *   **The Curriculum Agent:** Designs the STEM topics.
-    *   **The Tutor Agent:** Explains the concepts.
-    *   **The Visualizer Agent:** Decides how to animate the explanation.
+### 2. Design Patterns used in Learnscape
+*   **Chain-of-Thought (CoT):** We guide the model to think through a sequence. Instead of asking "What is this?", we ask "1. Analyze the image. 2. Identify materials. 3. Derive STEM principles." This improves accuracy by allowing the model to "show its work."
+*   **ReAct (Reason + Act):** While typically used for tool-calling, Learnscape uses a variant where the model **reasons** about a concept and then **acts** by generating a specific JSON schema that "commands" the browser to draw on the canvas.
+*   **Sequential Multi-Agent Pipeline:**
+    *   **Vision Specialist:** Interprets raw pixel data.
+    *   **Curriculum Designer:** Brainstorms educational topics.
+    *   **STEM Tutor:** Narrates the lesson.
+    *   **Visual Engineer:** Directs the animated overlays.
 
-## 💡 Simple Example for Interviews
-"Imagine a regular AI is like a book—you can read it and get information. An **AI Agent** is like a research assistant. If you give the assistant a camera, they don't just tell you what they see; they research the science behind it, draw a diagram on a whiteboard for you, and explain it out loud. That 'active' workflow is what makes it an agent."
+## 💡 Interview Analogy
+"If a standard AI is like a **static textbook**, Learnscape is like a **research assistant**. The textbook just gives you information if you turn to the right page. The assistant looks at what you're holding, researches its history and science, draws a diagram on a whiteboard for you, and explains it out loud. That 'active' workflow is the essence of an Agent."
 
-## 🚀 Why Learnscape is "Agentic"
-It doesn't just return text. It:
-1.  **Perceives** via the camera (Multimodal).
-2.  **Reasons** about STEM domains.
-3.  **Outputs** structured instructions for a UI to animate (Visual Overlays).
+## 🚀 Why Gemini 2.5 Flash?
+We chose **Gemini 2.5 Flash** because it is a **Multimodal** native model. It doesn't need a separate "eyes" model and "brain" model; it processes images and text in the same high-dimensional space, reducing latency and increasing contextual understanding.
