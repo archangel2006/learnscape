@@ -34,7 +34,15 @@ Learnscape is a production-ready prototype of an AI-powered visual tutor that br
     *   **AR Integration:** Porting to WebXR for Apple Vision Pro or Meta Quest.
     *   **Gamification:** Adding "Knowledge Badges" for scanning unique categories.
 *   **Threats:**
-    *   **Privacy Concerns:** Users may be hesitant to share camera feeds (mitigated by local processing).
+    *   **Privacy Concerns:** Users may be hesitant to share camera feeds.
+
+---
+
+## 📂 Documentation Deep Dives
+*   [AI Architecture](./AI_ARCHITECTURE.md) - Understanding the Agentic Pipeline.
+*   [AI Agents Explained](./AI_AGENT.md) - What is an Agent in plain English.
+*   [Component Breakdown](./COMPONENTS.md) - Frontend and Rendering logic.
+*   [Deployment Guide](./DEPLOYMENT.md) - Cloud Hosting & Secrets management.
 
 ---
 
