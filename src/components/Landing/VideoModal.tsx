@@ -23,13 +23,13 @@ export function VideoModal() {
         <DialogHeader className="sr-only">
           <DialogTitle>Product Demo</DialogTitle>
         </DialogHeader>
-        <div className="aspect-video w-full bg-black">
-          <video
+        <div className="aspect-video w-full">
+          <iframe
             className="w-full h-full"
-            src="/learnscape-demo.mp4"
-            controls
-            autoPlay
-            playsInline
+            src="https://www.youtube.com/embed/C3IYzxx6Adg?autoplay=1&rel=0"
+            title="Product Demo"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
           />
         </div>
       </DialogContent>
