@@ -2,7 +2,11 @@ import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
 export const ai = genkit({
-  plugins: [googleAI()],
+  plugins: [
+    googleAI({
+      apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY
+    })
+  ],
   model: 'googleai/gemini-2.5-flash',
 });
 
@@ -36,6 +40,15 @@ export async function runPromptWithFallback<TInput, TOutput>(
       lastError = err;
     }
   }
+  
+  console.error(
+    `[AI Fallback Error] All Gemini fallback models failed. Diagnostics:\n` +
+    `- GEMINI_API_KEY present: ${!!process.env.GEMINI_API_KEY}\n` +
+    `- GOOGLE_GENAI_API_KEY present: ${!!process.env.GOOGLE_GENAI_API_KEY}\n` +
+    `- GOOGLE_API_KEY present: ${!!process.env.GOOGLE_API_KEY}\n` +
+    `- Last error details: ${lastError?.message || lastError}`
+  );
+  
   throw new Error(`All Gemini fallback models failed. Last error: ${lastError?.message || lastError}`);
 }
 
