@@ -23,11 +23,14 @@ export function VideoModal() {
         <DialogHeader className="sr-only">
           <DialogTitle>Product Demo</DialogTitle>
         </DialogHeader>
-        <div className="aspect-video w-full flex items-center justify-center bg-slate-900 text-slate-400">
-          <div className="text-center space-y-4">
-            <Play size={64} className="mx-auto opacity-20" />
-            <p className="font-medium">Product Demo Placeholder</p>
-          </div>
+        <div className="aspect-video w-full bg-black">
+          <video
+            className="w-full h-full"
+            src="/learnscape-demo.mp4"
+            controls
+            autoPlay
+            playsInline
+          />
         </div>
       </DialogContent>
     </Dialog>
