@@ -308,46 +308,71 @@ export default function ScanPage() {
 
         {/* Explanation Dialog Modal */}
         <Dialog open={isExplanationOpen} onOpenChange={setIsExplanationOpen}>
-          <DialogContent className="sm:max-w-[400px] bg-black/60 backdrop-blur-2xl border-white/10 text-white p-0 overflow-hidden shadow-2xl ring-1 ring-white/10 scale-90 sm:scale-100">
-            <div className="h-full flex flex-col">
-              <DialogHeader className="p-6 border-b border-white/10 bg-white/5">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                    <Sparkles className="text-white" size={24} />
+          <DialogContent
+            className={[
+              // Base layout
+              "p-0 overflow-hidden",
+              // Glassmorphism background
+              "bg-black/40 backdrop-blur-2xl",
+              // Border & shadow
+              "border border-white/10 shadow-2xl ring-1 ring-white/10",
+              // Positioning & sizing — compact floating card
+              "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+              "w-[92vw] max-w-sm",
+              "max-h-[75vh]",
+              // Rounded
+              "rounded-2xl",
+              // Text color
+              "text-white",
+            ].join(" ")}
+          >
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <DialogHeader className="px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 mt-0.5">
+                    <Sparkles className="text-white" size={18} />
                   </div>
-                  <div className="flex-1 overflow-hidden">
-                    <DialogTitle className="text-primary text-sm font-black uppercase tracking-widest text-left truncate">
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-primary text-xs font-black uppercase tracking-widest text-left leading-tight line-clamp-2">
                       {selectedConcept}
                     </DialogTitle>
-                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest text-left">
-                      STEM {selectedSubject?.label || 'General'} Insight
+                    <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest text-left mt-0.5">
+                      {selectedSubject?.label || 'General'} Explanation
                     </p>
                   </div>
                 </div>
               </DialogHeader>
-              <ScrollArea className="h-[400px] p-6">
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <p className="text-base leading-relaxed font-medium text-white/90">
-                      {conceptExplanation}
-                    </p>
-                  </div>
-                  
+
+              {/* Scrollable content */}
+              <ScrollArea className="flex-1 overflow-y-auto max-h-[45vh]">
+                <div className="px-4 py-4 space-y-4">
+                  <p className="text-sm leading-relaxed font-medium text-white/90">
+                    {conceptExplanation}
+                  </p>
+
                   {sceneAnalysis && (
-                    <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-4">
+                    <div className="pt-4 border-t border-white/10 grid grid-cols-2 gap-3">
                       <div>
-                        <h4 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-3">Materials</h4>
-                        <div className="flex flex-wrap gap-2">
+                        <h4 className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-2">
+                          Materials
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
                           {sceneAnalysis.materials.map((m, i) => (
-                            <span key={i} className="px-2 py-1 bg-white/5 rounded-md text-[10px] font-bold text-white/60 uppercase tracking-tighter">
+                            <span
+                              key={i}
+                              className="px-2 py-0.5 bg-white/5 rounded-md text-[9px] font-bold text-white/60 uppercase tracking-tighter"
+                            >
                               {m}
                             </span>
                           ))}
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-3">Object</h4>
-                        <span className="px-2 py-1 bg-primary/10 rounded-md text-[10px] font-bold text-primary uppercase tracking-tighter">
+                        <h4 className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-2">
+                          Object
+                        </h4>
+                        <span className="px-2 py-0.5 bg-primary/10 rounded-md text-[9px] font-bold text-primary uppercase tracking-tighter">
                           {sceneAnalysis.primary_object}
                         </span>
                       </div>
@@ -355,12 +380,17 @@ export default function ScanPage() {
                   )}
                 </div>
               </ScrollArea>
-              <div className="p-4 bg-white/5 text-center">
-                <p className="text-[10px] text-white/20 font-bold uppercase tracking-[0.2em]">Learnscape Visual STEM Engine</p>
+
+              {/* Footer */}
+              <div className="px-4 py-2 border-t border-white/5 bg-white/5 shrink-0">
+                <p className="text-[8px] text-white/20 font-bold uppercase tracking-[0.2em] text-center">
+                  Learnscape Visual STEM Engine
+                </p>
               </div>
             </div>
           </DialogContent>
         </Dialog>
+
 
         {/* Bottom Controls Area */}
         <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 z-40 space-y-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
