@@ -7,7 +7,7 @@
  * - GenerateVisualOverlaySuggestionsOutput - The return type for the generateVisualOverlaySuggestions function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, runPromptWithFallback} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateVisualOverlaySuggestionsInputSchema = z.object({
@@ -83,7 +83,10 @@ const generateVisualOverlaySuggestionsFlow = ai.defineFlow(
     outputSchema: GenerateVisualOverlaySuggestionsOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
-    return output!;
+    const {output} = await runPromptWithFallback<GenerateVisualOverlaySuggestionsInput, GenerateVisualOverlaySuggestionsOutput>(
+      prompt,
+      input
+    );
+    return output;
   }
 );

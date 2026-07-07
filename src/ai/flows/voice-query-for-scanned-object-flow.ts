@@ -7,7 +7,7 @@
  * - VoiceQueryForScannedObjectOutput - The return type for the voiceQueryForScannedObject function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, runPromptWithFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const VoiceQueryForScannedObjectInputSchema = z.object({
@@ -65,7 +65,10 @@ const voiceQueryForScannedObjectFlow = ai.defineFlow(
     outputSchema: VoiceQueryForScannedObjectOutputSchema,
   },
   async (input) => {
-    const { output } = await voiceQueryPrompt(input);
-    return output!;
+    const { output } = await runPromptWithFallback<VoiceQueryForScannedObjectInput, VoiceQueryForScannedObjectOutput>(
+      voiceQueryPrompt,
+      input
+    );
+    return output;
   }
 );

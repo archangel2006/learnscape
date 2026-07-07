@@ -3,7 +3,7 @@
  * @fileOverview A Genkit flow that generates a conversational STEM explanation for a specific concept.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, runPromptWithFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const ExplainConceptInputSchema = z.object({
@@ -58,7 +58,10 @@ const explainConceptFlow = ai.defineFlow(
     outputSchema: ExplainConceptOutputSchema,
   },
   async (input) => {
-    const { output } = await explainConceptPrompt(input);
-    return output!;
+    const { output } = await runPromptWithFallback<ExplainConceptInput, ExplainConceptOutput>(
+      explainConceptPrompt,
+      input
+    );
+    return output;
   }
 );

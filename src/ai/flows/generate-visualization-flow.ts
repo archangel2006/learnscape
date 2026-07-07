@@ -3,7 +3,7 @@
  * @fileOverview A Genkit flow for generating animated STEM visualization instructions.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, runPromptWithFallback } from '@/ai/genkit';
 import { z } from 'zod';
 
 const VisualizationTypeSchema = z.enum([
@@ -70,7 +70,10 @@ const generateVisualizationsFlow = ai.defineFlow(
     outputSchema: GenerateVisualizationsOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    return output!;
+    const { output } = await runPromptWithFallback<GenerateVisualizationsInput, GenerateVisualizationsOutput>(
+      prompt,
+      input
+    );
+    return output;
   }
 );

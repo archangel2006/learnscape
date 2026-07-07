@@ -7,7 +7,7 @@
  * - ExplainScannedObjectOutput - The return type for the explainScannedObject function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, runPromptWithFallback} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const ExplainScannedObjectInputSchema = z.object({
@@ -52,7 +52,10 @@ const explainScannedObjectFlow = ai.defineFlow(
     outputSchema: ExplainScannedObjectOutputSchema,
   },
   async input => {
-    const {output} = await explainScannedObjectPrompt(input);
-    return output!;
+    const {output} = await runPromptWithFallback<ExplainScannedObjectInput, ExplainScannedObjectOutput>(
+      explainScannedObjectPrompt,
+      input
+    );
+    return output;
   }
 );

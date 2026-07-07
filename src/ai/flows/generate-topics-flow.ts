@@ -3,7 +3,7 @@
  * @fileOverview A Genkit flow for generating STEM learning topics based on a detected object.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, runPromptWithFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateTopicsInputSchema = z.object({
@@ -46,7 +46,10 @@ const generateTopicsFlow = ai.defineFlow(
     outputSchema: GenerateTopicsOutputSchema,
   },
   async (input) => {
-    const { output } = await generateTopicsPrompt(input);
-    return output!;
+    const { output } = await runPromptWithFallback<GenerateTopicsInput, GenerateTopicsOutput>(
+      generateTopicsPrompt,
+      input
+    );
+    return output;
   }
 );

@@ -7,7 +7,7 @@
  * - AnalyzeSceneOutput - The return type for the analyzeScene function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, runPromptWithFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const AnalyzeSceneInputSchema = z.object({
@@ -56,7 +56,10 @@ const analyzeSceneFlow = ai.defineFlow(
     outputSchema: AnalyzeSceneOutputSchema,
   },
   async (input) => {
-    const { output } = await analyzeScenePrompt(input);
-    return output!;
+    const { output } = await runPromptWithFallback<AnalyzeSceneInput, AnalyzeSceneOutput>(
+      analyzeScenePrompt,
+      input
+    );
+    return output;
   }
 );
